@@ -34,12 +34,16 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`🌟 SwarnaERP Kerala Jewellery Backend running on port ${PORT}`);
-  console.log(`💎 API Base: http://localhost:${PORT}/api`);
-  console.log(`⚖️  Kerala Benchmark: 1 Pavan = 8.000g | GST: 3% (1.5% CGST + 1.5% SGST)`);
-  console.log(`====================================================`);
-});
+// Start Server if run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`====================================================`);
+    console.log(`🌟 SwarnaERP Kerala Jewellery Backend running on port ${PORT}`);
+    console.log(`💎 API Base: http://localhost:${PORT}/api`);
+    console.log(`⚖️  Kerala Benchmark: 1 Pavan = 8.000g | GST: 3% (1.5% CGST + 1.5% SGST)`);
+    console.log(`====================================================`);
+  });
+}
+
+module.exports = app;
 
