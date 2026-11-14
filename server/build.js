@@ -42,3 +42,4 @@ if (fs.existsSync(clientDir)) {
 }
 
 console.log('✅ Server build step completed successfully!');
+
