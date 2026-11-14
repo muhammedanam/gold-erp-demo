@@ -32,9 +32,70 @@ if (fs.existsSync(clientDir)) {
     try {
       if (!fs.existsSync(serverDist)) fs.cpSync(clientDist, serverDist, { recursive: true });
       if (!fs.existsSync(rootDist)) fs.cpSync(clientDist, rootDist, { recursive: true });
-      console.log('✓ Build artifacts synchronized across server/dist and root/dist');
+
+      // Create Node entry points in dist so Vercel can run fullstack Express + Static
+      const serverEntrySource = `const express = require('express');
+const path = require('path');
+const cors = require('cors');
+let apiRoutes;
+try {
+  apiRoutes = require('../src/routes/api');
+} catch (e) {
+  try {
+    apiRoutes = require('../../server/src/routes/api');
+  } catch (err) {
+    console.warn('API routes fallback:', err.message);
+  }
+}
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+if (apiRoutes) {
+  app.use('/api', apiRoutes);
+}
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ONLINE',
+    system: 'SwarnaERP Kerala Jewellery Cloud',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Serve frontend static files
+app.use(express.static(__dirname));
+
+// SPA fallback to index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(\`SwarnaERP Cloud Server running on port \${PORT}\`);
+  });
+}
+
+module.exports = app;
+`;
+
+      fs.writeFileSync(path.join(serverDist, 'index.js'), serverEntrySource);
+      fs.writeFileSync(path.join(serverDist, 'app.js'), serverEntrySource);
+      fs.writeFileSync(path.join(serverDist, 'server.js'), serverEntrySource);
+
+      if (fs.existsSync(rootDist)) {
+        fs.writeFileSync(path.join(rootDist, 'index.js'), serverEntrySource);
+        fs.writeFileSync(path.join(rootDist, 'app.js'), serverEntrySource);
+        fs.writeFileSync(path.join(rootDist, 'server.js'), serverEntrySource);
+      }
+
+      console.log('✓ Created Node entry points (index.js, app.js, server.js) in dist');
     } catch (e) {
-      console.warn('Copy warning:', e.message);
+      console.warn('Copy/write warning:', e.message);
     }
   }
 } else {
@@ -42,4 +103,3 @@ if (fs.existsSync(clientDir)) {
 }
 
 console.log('✅ Server build step completed successfully!');
-

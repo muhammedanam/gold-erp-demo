@@ -27,7 +27,61 @@ if (inRoot && fs.existsSync(clientDist)) {
     fs.cpSync(clientDist, rootDist, { recursive: true });
     console.log('✓ Copied build artifacts to root dist/');
   }
+
+  // Create entry points
+  const entrySource = `const express = require('express');
+const path = require('path');
+const cors = require('cors');
+let apiRoutes;
+try {
+  apiRoutes = require('./server/src/routes/api');
+} catch (e) {
+  try {
+    apiRoutes = require('../server/src/routes/api');
+  } catch (err) {
+    console.warn('API routes fallback:', err.message);
+  }
 }
 
-console.log('✅ Build completed successfully!');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
+app.use(cors());
+app.use(express.json());
+
+if (apiRoutes) {
+  app.use('/api', apiRoutes);
+}
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ONLINE',
+    system: 'SwarnaERP Kerala Jewellery Cloud',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.use(express.static(__dirname));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(\`SwarnaERP Cloud Server running on port \${PORT}\`);
+  });
+}
+
+module.exports = app;
+`;
+
+  fs.writeFileSync(path.join(rootDist, 'index.js'), entrySource);
+  fs.writeFileSync(path.join(rootDist, 'app.js'), entrySource);
+  fs.writeFileSync(path.join(rootDist, 'server.js'), entrySource);
+  fs.writeFileSync(path.join(clientDist, 'index.js'), entrySource);
+  fs.writeFileSync(path.join(clientDist, 'app.js'), entrySource);
+  fs.writeFileSync(path.join(clientDist, 'server.js'), entrySource);
+}
+
+console.log('✅ Build completed successfully with Node entrypoints!');
