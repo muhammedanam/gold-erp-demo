@@ -30,3 +30,4 @@ if (inRoot && fs.existsSync(clientDist)) {
 }
 
 console.log('✅ Build completed successfully!');
+
