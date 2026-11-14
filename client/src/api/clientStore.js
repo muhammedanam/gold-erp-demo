@@ -660,3 +660,4 @@ export const clientStore = {
     return state.dayBook;
   }
 };
+
